@@ -1,26 +1,42 @@
 import pandas as pd
+from dotenv import load_dotenv
+import os
+import numpy as np
+import pandas as pd
+from datetime import datetime, timedelta
 
-# Load the original data
-try:
-    predictions_df = pd.read_csv("data/prediction_details.csv")
-    outcomes_df = pd.read_csv("data/outcome_details.csv")
-except FileNotFoundError as e:
-    print(f"Error loading data: {e}. Make sure the original data files are in the 'data/' directory.")
-    exit()
+def generate_data():
+    load_dotenv()
+    samples = 300
 
-# Get the prediction IDs from the predictions file
-prediction_ids = predictions_df["prediction_id"].dropna().unique()
+    end_time = datetime.now()
+    start_time = end_time - timedelta(days=7)
+    timestamps = [start_time + timedelta(seconds=np.random.randint(0, 604800)) for _ in range(samples)]
 
-# If there are more outcomes than predictions, truncate the outcomes dataframe
-if len(outcomes_df) > len(prediction_ids):
-    outcomes_df = outcomes_df.iloc[:len(prediction_ids)]
+    data = {
+            'prediction_id': [f'pred_{i}' for i in range(samples)],
+            'prediction_timestamp': timestamps,
+            'prediction_score': np.random.beta(2, 5, samples),  # Fraud probability scores
+            'actual_label': np.random.choice([0, 1], samples, p=[0.9, 0.1]),  # Mostly non-fraud
+            'transaction_amount': np.random.lognormal(3, 1.5, samples),
+            'user_history_days': np.random.randint(1, 1000, samples),
+            'device_type': np.random.choice(['mobile', 'desktop', 'tablet'], samples),
+            'location_risk': np.random.beta(1, 3, samples)
+        }
 
-# Overwrite the prediction_id in the outcomes dataframe
-# with the IDs from the predictions dataframe to ensure a match.
-outcomes_df["prediction_id"] = prediction_ids[:len(outcomes_df)]
 
-# Save the modified outcomes data to a new file
-new_outcomes_path = "data/outcome_details_modified.csv"
-outcomes_df.to_csv(new_outcomes_path, index=False)
+    df = pd.DataFrame(data)
 
-print(f"Successfully generated new outcomes file at '{new_outcomes_path}' with matching prediction IDs.")
+    df['prediction_score'] = (
+            df['prediction_score'] * 0.3 +
+            df['location_risk'] * 0.4 +
+            (df['transaction_amount'] > 1000).astype(int) * 0.2 +
+            (df['user_history_days'] < 30).astype(int) * 0.1
+        )
+
+    df['prediction_score'] = np.clip(df['prediction_score'], 0, 1)
+    return df
+
+
+
+

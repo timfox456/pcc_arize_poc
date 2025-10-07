@@ -1,1 +1,4 @@
-wheel==0.45.1
+pandas
+numpy
+python-dotenv
+arize

@@ -1,32 +1,41 @@
-# pcc_arize_poc# Arize Data Upload Project
+# Arize AI data pipeline
 
-This project contains a set of Python scripts to generate fake data, analyze its quality, and upload it to the Arize AI platform for model monitoring.
+This repository implements a synthetic fraud detection pipeline that generates, analyzes, and logs model data to **Arize AI** for monitoring and performance tracking.
 
-## Project Structure
+---
 
-- `.env`: Configuration file for storing API keys and other secrets.
-- `generate_fake_data.py`: Generates a modified outcomes dataset to ensure prediction IDs match.
-- `upload_to_arize.py`: Uploads the prediction and outcome data to Arize.
-- `examine_data.py`: Analyzes the data for quality issues before uploading.
-- `requirements.txt`: A list of Python dependencies required for the project.
-- `data/`: Directory containing the raw data files.
+## Overview
 
-## Setup and Installation
+The project simulates a binary fraud classification workflow. It:
 
-Follow these steps to set up your local environment and run the scripts.
+1. Generates synthetic prediction data with realistic fraud-related features.
+2. Performs analytics on the generated dataset.
+3. Logs the results to Arize AI for observability and analysis.
 
-### 1. Create a Virtual Environment
+---
 
-It is recommended to use a virtual environment to manage project dependencies.
+## File Structure
+
+| File                    | Description                                                        |
+| ----------------------- | ------------------------------------------------------------------ |
+| `generate_fake_data.py` | Generates synthetic fraud prediction data with relevant features.  |
+| `examine_data.py`       | Computes key analytics and prints performance summaries.           |
+| `main.py`               | Executes the full pipeline, from data generation to Arize logging. |
+
+---
+
+## Setup Instructions
+
+### 1. Clone the Repository
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+git clone <repository_url>
+cd <repository_folder>
 ```
 
 ### 2. Install Dependencies
 
-Install the required Python packages using the `requirements.txt` file.
+Ensure Python 3.8 or higher is installed, then run:
 
 ```bash
 pip install -r requirements.txt
@@ -34,39 +43,76 @@ pip install -r requirements.txt
 
 ### 3. Configure Environment Variables
 
-Create a `.env` file in the root of the project and add your Arize credentials:
+Create a `.env` file in the project root and add:
 
 ```
-ARIZE_SPACE_ID="YOUR_SPACE_ID"
-ARIZE_API_KEY="YOUR_API_KEY"
+ARIZE_API_KEY=your_arize_api_key
+ARIZE_SPACE_ID=your_arize_space_id
 ```
 
-Replace `"YOUR_SPACE_ID"` and `"YOUR_API_KEY"` with your actual Arize Space and API keys.
-
-## How to Run the Scripts
-
-### 1. Generate Modified Data
-
-Before uploading, run the `generate_fake_data.py` script to create a `outcome_details_modified.csv` file. This script ensures that the prediction IDs in the outcomes data align with the prediction data.
+### 4. Run the Pipeline
 
 ```bash
-python3 generate_fake_data.py
+python main.py
 ```
 
-### 2. Examine Data Quality
+---
 
-To analyze the data for potential issues like missing values or sparsity, run the `examine_data.py` script. This will print a report to the console, helping you identify problems before uploading.
+## Output Details
 
-```bash
-python3 examine_data.py
+* **Console Output**
+  Displays the generated dataset and analytics summary.
+
+* **CSV File**
+  A local copy of the dataset is saved as `new_data.csv`.
+
+* **Arize Logging**
+  The pipeline logs data to Arize for monitoring model metrics and feature trends.
+
+---
+
+## Analytics Summary
+
+The analytics module (`examine_data.py`) reports:
+
+* Accuracy of model predictions
+* Average prediction score
+* Actual fraud rate
+* Feature distributions and averages
+
+---
+
+## Core Components
+
+### 1. Data Generation (`generate_fake_data.py`)
+
+Produces a 7-day synthetic dataset (default: 300 samples) with fields such as:
+
+* `prediction_id`, `prediction_timestamp`
+* `prediction_score`, `actual_label`
+* `transaction_amount`, `user_history_days`, `device_type`, `location_risk`
+
+### 2. Data Examination (`examine_data.py`)
+
+Analyzes the dataset to compute metrics and display feature statistics.
+
+### 3. Data Logging (`main.py`)
+
+Defines the Arize schema and logs the dataset using `arize.pandas.logger.Client`.
+
+Example schema:
+
+```python
+schema = Schema(
+    prediction_id_column_name="prediction_id",
+    timestamp_column_name="prediction_timestamp",
+    prediction_score_column_name="prediction_score",
+    actual_label_column_name="actual_label",
+    feature_column_names=[
+        'transaction_amount', 
+        'user_history_days', 
+        'device_type', 
+        'location_risk'
+    ]
+)
 ```
-
-### 3. Upload Data to Arize
-
-After generating the modified data and ensuring its quality, run the `upload_to_arize.py` script to log the data to your Arize account.
-
-```bash
-python3 upload_to_arize.py
-```
-
-If the upload is successful, you will see a confirmation message in the console. You can then view your data in the Arize web interface.
