@@ -86,6 +86,7 @@ print("Logging data to Arize...")
 # Drop rows with null prediction_ids before logging
 merged_df.dropna(subset=["prediction_id"], inplace=True)
 merged_df["prediction_id"] = merged_df["prediction_id"].astype(str)
+merged_df.reset_index(drop=True, inplace=True)
 
 
 response = arize_client.log(
